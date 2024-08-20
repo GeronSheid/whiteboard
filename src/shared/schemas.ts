@@ -14,9 +14,11 @@ export class Ball {
 
 export class Player extends Ball {
     dy: number
-    constructor( x: number, y: number, r: number, bg: string, dy: number,) {
+    spellBg: string
+    constructor( x: number, y: number, r: number, bg: string, dy: number, spellBg: string) {
         super(x, y, r, bg)
         this.dy = dy
+        this.spellBg = spellBg
     }
 }
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { Player, Spell } from '../../../shared/schemas';
 
-const ball = new Player(100, 100, 50, 'red', 1)
+const balls: Player[] = [new Player(100, 100, 50, 'red', 1, 'yellow'), new Player(500, 100, 50, 'green', -1, 'blue')]
 
 const Canvas = () => {
 
@@ -15,13 +15,26 @@ const Canvas = () => {
         const spells: Spell[] = []
 
         const context = canvas.getContext('2d')
+
         const drawBall = (context: CanvasRenderingContext2D) => {
             context.clearRect(0, 0, canvas.width, canvas.height);
-            context.beginPath()
-            context.arc(ball.x, ball.y, ball.r, 0, 2 * Math.PI)
-            context.fillStyle = ball.bg;
-            context.fill()
-            context.closePath()
+            balls.forEach(ball => {
+                context.beginPath()
+                context.arc(ball.x, ball.y, ball.r, 0, 30 * Math.PI)
+                context.fillStyle = ball.bg;
+                context.fill()
+                context.closePath()
+            })
+        }
+
+        const updateBall = (ball: Player) => {
+            ball.y += ball.dy
+            if(ball.y - ball.r < 0) {
+                ball.y = ball.r
+                ball.dy = -ball.dy
+            } else if(ball.y + ball.r > canvas.height) {
+                ball.dy = - ball.dy
+            }
         }
 
         const drawSpell = (context: CanvasRenderingContext2D) => {
@@ -34,32 +47,44 @@ const Canvas = () => {
             })
         };
 
+        const index = (ball: Player) => {
+            if(balls.indexOf(ball) % 2 === 0) {
+                return 1
+            } else {
+                return -1
+            }
+        }
+
         const fireSpell = () => {
-            const newSpell = new Spell(ball.x + ball.r, ball.y, 10, 5, 'blue')
-            spells.push(newSpell)
+            balls.forEach(ball => {
+                const newSpell = new Spell(ball.x + (ball.r + 10) * index(ball), ball.y, 10, index(ball), ball.spellBg)
+                spells.push(newSpell)
+            })
         }
 
         const update = () => {
             //Начинаем анимацию игрока
-            ball.y += ball.dy
-            if(ball.y - ball.r < 0) {
-                ball.y = ball.r
-                ball.dy = -ball.dy
-            } else if(ball.y + ball.r > canvas.height) {
-                ball.dy = - ball.dy
-            }
-            //Начинаем швырять заклинания
-            spells.forEach(spell => {
-                spell.x += spell.dx
-            })
-            // очищаем это дерьмо
-            for(let i = spells.length - 1; i >=0; i--) {
-                if (spells[i].x > canvas.width) {
-                    spells.splice(i, 1);
+            balls.forEach(ball => {
+                updateBall(ball)
+                spells.forEach(spell => {
+                    spell.x += spell.dx
+                    spell.y += ball.dy
+                })
+                for(let i = spells.length - 1; i >=0; i--) {
+                    if (spells[i].x > canvas.width) {
+                        spells.splice(i, 1);
+                    }
+                    if(
+                        (spells[i].x < ball.x + ball.r && spells[i].x > ball.x - ball.r)
+                        &&
+                        (spells[i].y > ball.y + ball.r && spells[i].y < ball.y - ball.r)
+                    ) {
+                        spells.splice(i, 1);
+                        console.log('Попал')
+                        
+                    }
                 }
-            }
-            
-
+            })
         }
 
         const animate = () => {
@@ -74,7 +99,7 @@ const Canvas = () => {
         if(context) {
             setInterval(() => {
                 fireSpell()
-            }, 300)
+            }, 1500)
             animate()
         }
     }, [])
