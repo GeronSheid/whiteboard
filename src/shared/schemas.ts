@@ -15,10 +15,12 @@ export class Ball {
 export class Player extends Ball {
     dy: number
     spellBg: string
-    constructor( x: number, y: number, r: number, bg: string, dy: number, spellBg: string) {
+    fireRate: number
+    constructor( x: number, y: number, r: number, bg: string, dy: number, spellBg: string, fireRate: number) {
         super(x, y, r, bg)
         this.dy = dy
         this.spellBg = spellBg
+        this.fireRate = fireRate
     }
 }
 
