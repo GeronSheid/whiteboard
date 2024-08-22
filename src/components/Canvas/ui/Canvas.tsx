@@ -1,8 +1,11 @@
 import React, { useEffect, useRef } from 'react'
 import { Player, Spell } from '../../../shared/schemas';
+import { useStore } from '../../../store/store';
+
+
 
 const players: Player[] = [
-    new Player(100, 100, 50, 'red', 1, 'yellow', 1500),
+    new Player(100, 100, 50, 'red', 1, 'yellow', 1000),
     new Player(500, 100, 50, 'green', -1, 'blue', 1000)
 ];
 
@@ -74,7 +77,7 @@ const fireSpell = (playerIndex: number) => {
     spells[playerIndex].push(newSpell);
 }
 
-const checkSpellsCollision = (player: Player, playerSpells: Spell[], canvas: HTMLCanvasElement) => {
+const checkSpellsCollision = (player: Player, playerSpells: Spell[], canvas: HTMLCanvasElement, incrPlayer1: () => void, incrPlayer2: () => void) => {
         for (let i = playerSpells.length - 1; i >= 0; i--) {
             const spell = playerSpells[i]
             if (spell.x > canvas.width || spell.x < 0) {
@@ -87,8 +90,15 @@ const checkSpellsCollision = (player: Player, playerSpells: Spell[], canvas: HTM
                 spell.y > player.y - player.r &&
                 spell.y < player.y + player.r
             ) {
-                playerSpells.splice(i, 1); // Удаляем spell, если он попал в игрока
-                console.log(`Попал в игрока ${players.indexOf(player) + 1}`);
+                playerSpells.splice(i, 1);
+                const playerIndex = players.indexOf(player);
+                if(playerIndex === 0) {
+                    incrPlayer1()
+                }
+                if(playerIndex === 1) {
+                    incrPlayer2()
+                }
+                // console.log(`Попал в игрока ${players.indexOf(player) + 1}`);
             }
         }
 }
@@ -96,7 +106,7 @@ const checkSpellsCollision = (player: Player, playerSpells: Spell[], canvas: HTM
 const update = (canvas: HTMLCanvasElement, mouseRef: React.MutableRefObject<{
     x: number;
     y: number;
-}>) => {
+}>, incrPlayer1: () => void, incrPlayer2: () => void) => {
         players.forEach(player => {
             updatePlayer(player, canvas, mouseRef)
             const playerIndex = players.indexOf(player);
@@ -109,7 +119,7 @@ const update = (canvas: HTMLCanvasElement, mouseRef: React.MutableRefObject<{
             spells[playerIndex].forEach(spell => {
                 spell.x += spell.dx
             });
-            checkSpellsCollision(players[oponentIndex], spells[playerIndex], canvas)
+            checkSpellsCollision(players[oponentIndex], spells[playerIndex], canvas, incrPlayer1, incrPlayer2)
         })
 }
 
@@ -124,14 +134,19 @@ const update = (canvas: HTMLCanvasElement, mouseRef: React.MutableRefObject<{
             mouseRef.current.y = event.clientY
         }
 
+        const incrPlayer1 = useStore(state => state.incrPlayer1)
+        const incrPlayer2 = useStore(state => state.incrPlayer2)
+        const clearAll = useStore(state => state.clearAll)
+
         useEffect(() => {
             if (canvasRef) {
                 const canvas = canvasRef.current;
                 const context = canvas?.getContext('2d');
-                
+                clearAll()
                 if (canvas && context) {
                     const animate = () => {
-                        update(canvas, mouseRef);
+                        
+                        update(canvas, mouseRef, incrPlayer1, incrPlayer2);
                         drawPlayers(context, canvas);
                         drawSpells(context);
                         requestAnimationFrame(animate)
@@ -145,7 +160,7 @@ const update = (canvas: HTMLCanvasElement, mouseRef: React.MutableRefObject<{
                     })
                 }
             }
-        }, [mouseRef])
+        }, [mouseRef, incrPlayer1, incrPlayer2, clearAll])
 
         return (
             <canvas

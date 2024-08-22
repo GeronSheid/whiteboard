@@ -1,0 +1,16 @@
+.menu {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.score {
+    display: flex;
+    gap: 10px;
+    font-size: 20px;
+    line-height: 1.5;
+    font-weight: 700;
+    padding: 15px;
+    border: 1px solid #333;
+}
