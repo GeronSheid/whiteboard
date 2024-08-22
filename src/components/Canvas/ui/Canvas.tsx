@@ -9,7 +9,7 @@ const players: Player[] = [
     new Player(500, 100, 50, 'green', -1, 'blue', 1000)
 ];
 
-const spells: Spell[][] = players.map(() => []);
+let spells: Spell[][] = players.map(() => []);
 
 const index = (ball: Player) => (players.indexOf(ball) % 2 === 0 ? 1 : -1);
 
@@ -137,30 +137,39 @@ const update = (canvas: HTMLCanvasElement, mouseRef: React.MutableRefObject<{
         const incrPlayer1 = useStore(state => state.incrPlayer1)
         const incrPlayer2 = useStore(state => state.incrPlayer2)
         const clearAll = useStore(state => state.clearAll)
+        const isRunning = useStore(state => state.isRunning)
 
         useEffect(() => {
-            if (canvasRef) {
+            if (canvasRef && isRunning) {
                 const canvas = canvasRef.current;
                 const context = canvas?.getContext('2d');
                 clearAll()
                 if (canvas && context) {
+                    let animationFrameId: number;
+                    const intervals: number[] = [];
                     const animate = () => {
                         
                         update(canvas, mouseRef, incrPlayer1, incrPlayer2);
                         drawPlayers(context, canvas);
                         drawSpells(context);
-                        requestAnimationFrame(animate)
+                        animationFrameId = requestAnimationFrame(animate);
                     }
 
                     animate()
                     players.forEach((player, i) => {
-                        setInterval(() => {
+                        const intervalId = setInterval(() => {
                             fireSpell(i)
-                        }, player.fireRate)
+                        }, player.fireRate);
+                        intervals.push(intervalId)
                     })
+                    return () => {
+                        cancelAnimationFrame(animationFrameId)
+                        intervals.forEach(clearInterval)
+                        spells = players.map(() => [])
+                    }
                 }
             }
-        }, [mouseRef, incrPlayer1, incrPlayer2, clearAll])
+        }, [mouseRef, incrPlayer1, incrPlayer2, clearAll, isRunning])
 
         return (
             <canvas

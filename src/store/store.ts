@@ -1,20 +1,27 @@
 import { create } from "zustand";
 
 interface IState {
+    isRunning: boolean
     score: {
         player1: number
         player2: number
     }
+    setIsRunning: () => void
     incrPlayer1: () => void
     incrPlayer2: () => void
     clearAll: () => void
 }
 
 export const useStore = create<IState>((set) => ({
+    isRunning: false,
     score: {
         player1: 0,
         player2: 0,
     },
+    setIsRunning: () => set((state) => ({
+        isRunning: !state.isRunning
+        
+    })),
     incrPlayer1: () => set((state) => ({
         score: {
             ...state.score,
